@@ -359,7 +359,7 @@ Notre mission est claire : accompagner les ports du monde entier dans leur trans
       {/* Hero Section - Style SIPORTS */}
       <div className="relative h-96 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 overflow-hidden">
         <div className="absolute inset-0 bg-black/30"></div>
-        <div className="absolute inset-0 bg-[url('/images/port-hero-pattern.png')] opacity-10"></div>
+        <div className="absolute inset-0 bg-[url("../public/images/port-hero-pattern.png")] opacity-10"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full">

@@ -608,7 +608,7 @@ Le projet, qui s'échelonnera sur 36 mois, créera plus de 500 emplois locaux et
         {/* Background */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700">
           <div className="absolute inset-0 bg-black/30"></div>
-          <div className="absolute inset-0 bg-[url('/images/maritime-pattern.svg')] opacity-5"></div>
+          <div className="absolute inset-0 bg-[url("../public/images/maritime-pattern.svg")] opacity-5"></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
