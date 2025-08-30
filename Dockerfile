@@ -1,52 +1,55 @@
-# 🚀 DOCKERFILE OPTIMISÉ - Version corrigée avec multi-stage build amélioré
+# Multi-stage Docker build
+FROM python:3.11-slim as backend
 
-# Étape de build
-FROM node:20-alpine AS build
-WORKDIR /app
+WORKDIR /app/backend
 
-# Optimisation des couches Docker - copier d'abord les fichiers de dépendances
-COPY package.json yarn.lock ./
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Nettoyer et installer les dépendances
-RUN rm -f package-lock.json && \
-    yarn install --frozen-lockfile --network-timeout 300000 --production=false
+# Copy backend requirements and install Python dependencies
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Vérification de l'installation des dépendances critiques
-RUN ls node_modules/@vitejs/plugin-react/package.json && echo "✅ @vitejs/plugin-react installé"
+# Copy backend code
+COPY backend/ .
 
-# Copier le code source
-COPY . .
+# Frontend build stage
+FROM node:18-alpine as frontend
 
-# Build de production
-ENV NODE_ENV=production
+WORKDIR /app/frontend
+
+# Copy frontend package files
+COPY frontend/package.json frontend/yarn.lock ./
+
+# Install frontend dependencies
+RUN yarn install --frozen-lockfile
+
+# Copy frontend code and build
+COPY frontend/ .
 RUN yarn build
 
-# Vérification du build
-RUN ls -la dist/index.html && echo "✅ Build réussi"
+# Final stage
+FROM python:3.11-slim
 
-# Étape de runtime avec Nginx optimisé
-FROM nginx:alpine
+WORKDIR /app
 
-# Installer gettext pour envsubst
-RUN apk add --no-cache gettext
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copier les fichiers buildés
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy backend from build stage
+COPY --from=backend /app/backend /app/backend
+COPY --from=backend /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY --from=backend /usr/local/bin /usr/local/bin
 
-# Copier la configuration Nginx optimisée
-COPY nginx.conf.template.fixed /etc/nginx/templates/default.conf.template
+# Copy frontend build from build stage
+COPY --from=frontend /app/frontend/build /app/frontend/build
 
-# Créer un script d'entrée pour une meilleure gestion
-RUN echo '#!/bin/sh' > /docker-entrypoint.sh && \
-    echo 'export PORT=${PORT:-3000}' >> /docker-entrypoint.sh && \
-    echo 'envsubst < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.sh && \
-    echo 'nginx -t' >> /docker-entrypoint.sh && \
-    echo 'exec nginx -g "daemon off;"' >> /docker-entrypoint.sh && \
-    chmod +x /docker-entrypoint.sh
+# Expose port
+EXPOSE 8001
 
-# Exposer le port
-EXPOSE 3000
-
-# Utiliser le script d'entrée
-CMD ["/docker-entrypoint.sh"]
-
+# Start command
+CMD ["python", "-m", "uvicorn", "backend.server:app", "--host", "0.0.0.0", "--port", "8001"]

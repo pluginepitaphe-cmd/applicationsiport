@@ -1,19 +1,16 @@
 [phases.setup]
-nixPkgs = ["nodejs_20", "yarn"]
+nixPkgs = ['nodejs', 'python311', 'yarn']
 
 [phases.install]
-dependsOn = ["setup"]
 cmds = [
-  "rm -f package-lock.json",
-  "yarn install --network-timeout 300000"
+    'cd frontend && yarn install --frozen-lockfile',
+    'cd backend && pip install -r requirements.txt'
 ]
 
 [phases.build]
-dependsOn = ["install"]
-cmds = ["yarn build"]
+cmds = [
+    'cd frontend && yarn build'
+]
 
 [start]
-cmd = "yarn start"
-
-[variables]
-NODE_VERSION = "20"
+cmd = 'cd backend && python -m uvicorn server:app --host 0.0.0.0 --port $PORT'

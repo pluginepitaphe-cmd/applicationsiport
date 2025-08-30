@@ -1,24 +1,25 @@
 {
   "version": 2,
-  "buildCommand": "yarn build",
-  "outputDirectory": "dist",
-  "installCommand": "yarn install --network-timeout 300000",
-  "framework": "vite",
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
   "routes": [
     {
-      "src": "/assets/(.*)",
-      "headers": {
-        "cache-control": "max-age=31536000, immutable"
-      }
+      "src": "/api/(.*)",
+      "dest": "https://your-railway-backend-url.up.railway.app/api/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "frontend/$1"
     }
   ],
   "env": {
-    "VITE_BACKEND_URL": "https://siports-backend.up.railway.app",
-    "VITE_APP_NAME": "SIPORTS v2.0",
-    "VITE_APP_VERSION": "2.0.0"
+    "REACT_APP_BACKEND_URL": "https://your-railway-backend-url.up.railway.app"
   }
 }
