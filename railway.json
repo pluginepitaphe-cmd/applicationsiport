@@ -4,14 +4,8 @@
   },
   "deploy": {
     "numReplicas": 1,
-    "restartPolicyType": "ON_FAILURE"
-  },
-  "plugins": [
-    {
-      "name": "postgresql",
-      "options": {
-        "version": "14"
-      }
-    }
-  ]
+    "restartPolicyType": "ON_FAILURE",
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 100
+  }
 }

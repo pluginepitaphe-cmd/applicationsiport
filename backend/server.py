@@ -61,6 +61,27 @@ app = FastAPI(lifespan=lifespan)
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# ROOT ENDPOINT FOR RAILWAY SERVICE DETECTION
+@app.get("/")
+async def root_health():
+    """Root endpoint for Railway service detection"""
+    return {
+        "message": "SiportApplication API", 
+        "status": "healthy",
+        "timestamp": datetime.utcnow(),
+        "api_base": "/api"
+    }
+
+# HEALTH ENDPOINT AT ROOT LEVEL FOR RAILWAY
+@app.get("/health")
+async def root_health_check():
+    """Health check at root level for Railway"""
+    return {
+        "status": "healthy", 
+        "timestamp": datetime.utcnow(),
+        "service": "SiportApplication"
+    }
+
 # API Routes
 @api_router.get("/")
 async def root():
