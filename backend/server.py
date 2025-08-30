@@ -1,6 +1,7 @@
 from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import os
 import logging
 from pathlib import Path
@@ -8,16 +9,19 @@ from pydantic import BaseModel, Field
 from typing import List
 import uuid
 from datetime import datetime
-from database import database, connect_db, disconnect_db, create_tables, StatusCheckModel
+
+# Configure logging first
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Create the main app
-app = FastAPI()
-
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
+# Import database after logging is configured
+from database import database, connect_db, disconnect_db, create_tables, StatusCheckModel
 
 # Pydantic models for API
 class StatusCheck(BaseModel):
@@ -25,28 +29,51 @@ class StatusCheck(BaseModel):
     client_name: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
+    class Config:
+        from_attributes = True
+
 class StatusCheckCreate(BaseModel):
     client_name: str
 
-# Database startup and shutdown events
-@app.on_event("startup")
-async def startup():
-    await connect_db()
-    await create_tables()
-    logger.info("Database connected and tables created")
+# Database lifespan context manager (replaces deprecated on_event)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    try:
+        await connect_db()
+        await create_tables()
+        logger.info("Database connected and tables created")
+        yield
+    except Exception as e:
+        logger.error(f"Database startup error: {e}")
+        raise
+    finally:
+        # Shutdown
+        try:
+            await disconnect_db()
+            logger.info("Database disconnected")
+        except Exception as e:
+            logger.error(f"Database shutdown error: {e}")
 
-@app.on_event("shutdown")
-async def shutdown():
-    await disconnect_db()
-    logger.info("Database disconnected")
+# Create the main app with lifespan
+app = FastAPI(lifespan=lifespan)
+
+# Create a router with the /api prefix
+api_router = APIRouter(prefix="/api")
 
 # API Routes
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Hello World", "status": "online"}
+
+@api_router.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "healthy", "timestamp": datetime.utcnow()}
 
 @api_router.post("/status", response_model=StatusCheck)
 async def create_status_check(input: StatusCheckCreate):
+    """Create a new status check"""
     # Create status check object
     status_obj = StatusCheck(client_name=input.client_name)
     
@@ -63,14 +90,16 @@ async def create_status_check(input: StatusCheckCreate):
     
     try:
         await database.execute(query=query, values=values)
+        logger.info(f"Created status check: {status_obj.id}")
         return status_obj
     except Exception as e:
         logger.error(f"Error creating status check: {e}")
-        raise HTTPException(status_code=500, detail="Error creating status check")
+        raise HTTPException(status_code=500, detail=f"Error creating status check: {str(e)}")
 
 @api_router.get("/status", response_model=List[StatusCheck])
 async def get_status_checks():
-    query = "SELECT id, client_name, timestamp FROM status_checks ORDER BY timestamp DESC"
+    """Get all status checks"""
+    query = "SELECT id, client_name, timestamp FROM status_checks ORDER BY timestamp DESC LIMIT 100"
     
     try:
         results = await database.fetch_all(query=query)
@@ -81,10 +110,11 @@ async def get_status_checks():
                 client_name=row["client_name"],
                 timestamp=row["timestamp"]
             ))
+        logger.info(f"Retrieved {len(status_checks)} status checks")
         return status_checks
     except Exception as e:
         logger.error(f"Error fetching status checks: {e}")
-        raise HTTPException(status_code=500, detail="Error fetching status checks")
+        raise HTTPException(status_code=500, detail=f"Error fetching status checks: {str(e)}")
 
 # Include the router in the main app
 app.include_router(api_router)
@@ -97,10 +127,3 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)

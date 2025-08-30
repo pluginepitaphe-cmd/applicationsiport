@@ -14,3 +14,7 @@ cmds = [
 
 [start]
 cmd = 'cd backend && python -m uvicorn server:app --host 0.0.0.0 --port $PORT'
+
+[variables]
+# Railway will provide DATABASE_URL automatically when PostgreSQL is added
+PORT = "8001"

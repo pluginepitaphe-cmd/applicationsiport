@@ -5,5 +5,13 @@
   "deploy": {
     "numReplicas": 1,
     "restartPolicyType": "ON_FAILURE"
-  }
+  },
+  "plugins": [
+    {
+      "name": "postgresql",
+      "options": {
+        "version": "14"
+      }
+    }
+  ]
 }
