@@ -1,0 +1,32 @@
+# Docker ignore pour SIPORTS v2.0
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.nyc_output
+coverage
+.nyc_output
+.vscode
+.DS_Store
+*.log
+dist
+build
+__pycache__
+*.pyc
+.pytest_cache
+
+# Ignore package-lock.json pour éviter les conflits avec yarn
+package-lock.json
+**/package-lock.json
+
+# Ignore cache et temp files
+.vite-temp
+.cache
+.tmp
+
+# Ignore Dockerfile alternatifs
+Dockerfile.old
+Dockerfile.railway
+Dockerfile.*

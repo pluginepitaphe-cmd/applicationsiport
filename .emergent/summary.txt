@@ -1,0 +1,61 @@
+<analysis>
+The previous AI engineer meticulously handled the SIPORTS application's deployment and compatibility challenges. Initially, efforts focused on migrating the backend from SQLite to PostgreSQL on Railway, successfully resolving database connection issues (including persistent SSL errors). The core of the trajectory then shifted to stabilizing the frontend deployment on Vercel, facing a series of persistent Node.js version and package manager (Yarn vs. NPM) incompatibilities, and resolving Failed to fetch API errors due to Vercel proxy/CORS. The engineer repeatedly created and refined frontend deployment packages, simplifying dependencies and enforcing NPM usage. Towards the end, an API endpoint for exhibitors was identified as missing on the Railway backend and subsequently added. The trajectory culminates with the engineer attempting to consolidate both fixed backend and frontend into a single, fully tested, and guaranteed deployable package, addressing all previous issues.
+</analysis>
+
+<product_requirements>
+The SIPORTS application is a maritime event platform. It was initially migrated from Flask/React to FastAPI/React. Core functionalities include professional analytics, real-time notifications, AI recommendations, an appointment calendar, exhibitor profiles (including mini-sites), and a messaging system. The platform supports multi-tier visitor packages (Free, Basic, Premium, VIP) and partner/exhibitor packages, integrated with an advanced matching system and their respective dashboards (visitor, partner, exhibitor, admin). Admin authentication is essential. A key feature is SIPORTS v2.0, an advanced AI chatbot. WordPress integration for embedding and data synchronization was pursued. The primary current goal is robust production deployment: FastAPI backend on Railway with persistent PostgreSQL, and React frontend on Vercel, ensuring full connectivity and accessibility from  and mobile applications, all while addressing critical bugs like admin authentication and the Se connecter button.
+</product_requirements>
+
+<key_technical_concepts>
+-   **Frontend**: React.js, Vite, Next.js (for Vercel config), Vercel, Yarn/NPM.
+-   **Backend**: FastAPI, Python, Gunicorn, SQLite (initial), PostgreSQL (final), SQLAlchemy, Psycopg2-binary, PyJWT.
+-   **Deployment**: Railway, Kubernetes, Docker, Supervisorctl, CI/CD, Environment Variables, CORS.
+-   **Integration**: WordPress, AI/LLM (chatbot).
+-   **Tools**: Tar, Git, curl.
+</key_technical_concepts>
+
+<code_architecture>
+The application follows a standard full-stack architecture with a React/Vite frontend and a FastAPI/Python backend. The backend initially used SQLite but was successfully migrated to PostgreSQL for production on Railway.
+
+
+-   ****: The main FastAPI backend file. It was continuously refined for PostgreSQL compatibility, incorporating . Crucially, an  endpoint was added to list exhibitors, resolving a critical API error during frontend integration. It handles authentication, chatbot, and admin dashboard logic.
+-   ****: Abstracts database connections (SQLite for local, PostgreSQL for production), handling table creation and basic ORM operations. Essential for flexible database environments.
+-   ****: Manages Python dependencies. Regularly updated to include , , and  for production.
+-   ****: Frontend build configuration. Modified to include the current host in  to resolve frontend loading issues on the preview URL.
+-   ****: Frontend API client. Modified to explicitly use  and later to hardcode the Railway URL for debugging Failed to fetch errors.
+-   ****: Frontend authentication API. Modified similarly to  to ensure direct connection to the Railway backend for login requests.
+-   ** (frontend)**: Defines frontend dependencies and scripts. Heavily modified across multiple iterations to downgrade  and other packages to versions compatible with Node.js 18, and to simplify dependencies (e.g., removing Tailwind CSS, ESLint). Also,  property was checked.
+-   ****: Vercel deployment configuration. Modified multiple times to include  for  proxying to the Railway backend and  for CORS. Crucially,  was removed due to conflict with . Later,  and environment variables were added to force NPM usage over Yarn.
+-   **Deployment Artifacts (various  files)**: Numerous  archives were created (, , , , , , , , ) each representing an attempt to package the application (or parts of it) with specific fixes for Vercel deployment, Node.js/Yarn compatibility, and missing backend endpoints.
+</code_architecture>
+
+<pending_tasks>
+-   Integrate Partner/Exhibitor Package Logic (backend ready, frontend integration pending).
+-   Implement Advanced Matching Logic (frontend/backend integration pending).
+-   WordPress Synchronization (backend ready, full configuration/webhooks pending).
+-   Complete the implementation of the professional mini-site for exhibitor profiles (frontend development).
+-   Ensure both Vercel and Railway deployments are fully operational and accessible, including final connection of the frontend to the backend.
+</pending_tasks>
+
+<current_work>
+Immediately prior to this summary, the AI engineer was deep in troubleshooting and resolving persistent frontend deployment issues on Vercel, specifically the  API error and Node.js/Yarn compatibility problems during the build process.
+
+The Railway backend was confirmed to be operational, including a newly added  endpoint. The main challenge revolved around Vercel's build environment (Node.js 18.20.5 vs. required Node.js 20+) and its default use of Yarn. The AI engineer attempted multiple solutions:
+1.  **Vite configuration fix**: Updated  to allow the preview domain.
+2.  **Frontend API client adjustments**: Modified  and  to directly use the Railway backend URL, bypassing Vercel's proxy issues.
+3.  **Vercel configuration iterations**: Created numerous  packages (e.g., , , ) containing different configurations and dependency sets. These iterations aimed to:
+    *   Downgrade  and other dependencies to Node.js 18 compatible versions.
+    *   Simplify the frontend package by removing , , and .
+    *   Remove problematic frameworks like Tailwind CSS to avoid PostCSS conflicts.
+    *   Explicitly configure , , and  to force Vercel to use NPM for dependency installation and disable Yarn.
+    *   Include a working backend with the  endpoint.
+
+Despite these extensive efforts and multiple package creations, the user reported the yarn install v1.22.22
+[1/4] Resolving packages...
+success Already up-to-date.
+Done in 0.70s. error and  persisted, expressing frustration. The AI engineer's last action was to commit to creating a complete and tested version of the entire application (backend + frontend) that guarantees successful deployment, and was in the process of building the  package. The current state is that this final package assembly is in progress.
+</current_work>
+
+<optional_next_step>
+Complete the assembly and packaging of the comprehensive  application, ensuring all components are integrated and the package is ready for deployment.
+</optional_next_step>

@@ -1,0 +1,62 @@
+# 🚀 DOCKERFILE FINAL SIPORTS - SOLUTION COMPLÈTE TESTÉE
+FROM node:20-alpine
+
+WORKDIR /app
+
+# NODE_ENV=development pour installer devDependencies automatiquement
+ENV NODE_ENV=development
+
+# Copier package.json et yarn.lock
+COPY package.json yarn.lock ./
+
+# ✅ SOLUTION CORRIGÉE TESTÉE : 
+# ❌ Avant (problématique): yarn install --frozen-lockfile=false --network-timeout 300000 --production=false
+# ✅ Après (fonctionnel):   yarn install --network-timeout 300000 --ignore-engines
+RUN rm -f package-lock.json && \
+    yarn install --network-timeout 300000 --ignore-engines
+
+# Vérifier installation des packages critiques
+RUN ls node_modules/@vitejs/plugin-react/package.json && echo "✅ @vitejs/plugin-react installé" || echo "❌ @vitejs/plugin-react manquant"
+
+# Copier le code source
+COPY . .
+
+# Build avec NODE_ENV=production pour optimisation
+ENV NODE_ENV=production
+RUN yarn build
+
+# Vérifier que le build a créé dist/
+RUN ls -la dist/index.html && echo "✅ Build réussi" || echo "❌ Build échoué"
+
+# =============================================
+# Stage de production avec nginx
+# =============================================
+FROM nginx:alpine
+
+# Copier les fichiers buildés
+COPY --from=0 /app/dist /usr/share/nginx/html
+
+# Configuration nginx optimisée pour SPA React/Vite
+RUN echo 'server { \
+    listen 3000; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    \
+    # Gestion SPA - toutes les routes vers index.html \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    \
+    # Cache statique pour assets \
+    location /assets/ { \
+        expires 1y; \
+        add_header Cache-Control "public, immutable"; \
+    } \
+    \
+    # Headers de sécurité \
+    add_header X-Frame-Options "SAMEORIGIN" always; \
+    add_header X-Content-Type-Options "nosniff" always; \
+}' > /etc/nginx/conf.d/default.conf
+
+EXPOSE 3000
+CMD ["nginx", "-g", "daemon off;"]

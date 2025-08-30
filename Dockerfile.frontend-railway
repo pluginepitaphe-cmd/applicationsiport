@@ -1,0 +1,44 @@
+# 🚀 DOCKERFILE RAILWAY OPTIMISÉ - SIPORTS FRONTEND
+# Résout les problèmes yarn.lock et package-lock.json
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Nettoyer les conflits de package managers
+RUN rm -f package-lock.json
+
+# Copier les fichiers package
+COPY package.json ./
+
+# Si yarn.lock existe, l'utiliser, sinon le créer
+COPY yarn.loc[k] ./
+
+# Installation avec gestion flexible des lockfiles
+RUN yarn install --network-timeout 300000 || \
+    (rm -f yarn.lock && yarn install --network-timeout 300000)
+
+# Copier le code source
+COPY . .
+
+# Build de production
+RUN yarn build
+
+# Stage de production avec Nginx
+FROM nginx:alpine
+
+# Copier les fichiers buildés
+COPY --from=0 /app/dist /usr/share/nginx/html
+
+# Configuration nginx personnalisée si elle existe
+COPY nginx.con[f] /etc/nginx/nginx.conf 2>/dev/null || echo "Using default nginx config"
+
+# Créer une config nginx par défaut si nécessaire
+RUN if [ ! -f /etc/nginx/nginx.conf.bak ]; then \
+    cp /etc/nginx/nginx.conf /etc/nginx/nginx.conf.bak; \
+    echo 'server { listen 3000; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/default.conf; \
+    fi
+
+EXPOSE 3000
+
+CMD ["nginx", "-g", "daemon off;"]
