@@ -5,7 +5,7 @@
   "deploy": {
     "numReplicas": 1,
     "restartPolicyType": "ON_FAILURE",
-    "startCommand": "npm start",
+    "startCommand": "yarn start",
     "healthcheckPath": "/api/",
     "healthcheckTimeout": 100
   }
