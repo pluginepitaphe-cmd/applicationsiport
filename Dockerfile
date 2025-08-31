@@ -23,7 +23,7 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/yarn.lock ./
 
 # Install frontend dependencies
-RUN npm install -g npm@latest && npm install -g yarn && yarn install --network-timeout 100000
+RUN npm install -g npm@latest && yarn install --network-timeout 100000
 
 # Copy frontend code and build
 COPY frontend/ .
