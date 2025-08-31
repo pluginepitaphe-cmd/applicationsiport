@@ -1,10 +1,9 @@
-# Multi-stage Docker build
 FROM python:3.11-slim as backend
 
 WORKDIR /app/backend
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,7 +23,7 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/yarn.lock ./
 
 # Install frontend dependencies
-RUN yarn install --frozen-lockfile
+RUN yarn install --network-timeout 100000
 
 # Copy frontend code and build
 COPY frontend/ .
@@ -36,7 +35,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
