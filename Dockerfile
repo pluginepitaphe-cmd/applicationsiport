@@ -23,7 +23,7 @@ WORKDIR /app/frontend
 COPY frontend/package.json frontend/yarn.lock ./
 
 # Install frontend dependencies
-RUN npm install -g npm@latest && yarn install --network-timeout 100000
+RUN yarn install --network-timeout 100000
 
 # Copy frontend code and build
 COPY frontend/ .
@@ -34,10 +34,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Copy yarn executable from frontend stage
+COPY --from=frontend /usr/local/bin/yarn /usr/local/bin/yarn
 
 # Copy backend from build stage
 COPY --from=backend /app/backend /app/backend
